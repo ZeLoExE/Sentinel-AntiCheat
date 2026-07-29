@@ -228,6 +228,10 @@ This design ensures legitimate skilled players are not flagged while cheaters ac
 
 MIT License - See LICENSE file for details.
 
+## Contributors
+
+- **ZeLoExE** — Creator and maintainer
+
 ## Credits
 
 Built with modern C++20, designed for the Half-Life GoldSrc community.
