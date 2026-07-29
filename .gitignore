@@ -1,0 +1,50 @@
+# Build directories
+build/
+cmake-build-*/
+out/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.swp
+*.sublime-*
+
+# Compiled files
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# Dependencies (third-party headers go here but are gitignored if downloaded)
+third_party/sqlite3/sqlite3.c
+third_party/sqlite3/sqlite3.h
+third_party/json/json.hpp
+third_party/httplib/httplib.h
+third_party/yaml-cpp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Replay files
+*.screc
+*.screc.db
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env

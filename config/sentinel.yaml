@@ -1,0 +1,129 @@
+# ============================================================================
+# Sentinel AntiCheat - Default Configuration
+# ============================================================================
+# All detector thresholds, risk values, and system settings are configurable.
+# ============================================================================
+
+# ── System Settings ──────────────────────────────────────────────────────
+system:
+  debug: false
+  update_interval_ms: 100
+
+# ── Detection Modules ────────────────────────────────────────────────────
+detectors:
+
+  aimbot:
+    enabled: true
+    risk_score: 25
+    threshold: 0.5
+    min_samples: 30
+    cooldown_ms: 5000
+    weights:
+      snap_detection: 25
+      silent_aim: 35
+      perfect_tracking: 20
+      trigger_bot: 15
+      micro_correction: 15
+      recoil_compensation: 10
+      smoothing_anomaly: 10
+
+  movement:
+    enabled: true
+    risk_score: 25
+    threshold: 0.5
+    min_samples: 20
+    cooldown_ms: 5000
+    weights:
+      bhop: 10
+      speedhack: 30
+      auto_strafe: 15
+      ground_strafe: 10
+      duck_script: 8
+      air_movement: 10
+
+  network:
+    enabled: true
+    risk_score: 20
+    threshold: 0.5
+    min_samples: 30
+    cooldown_ms: 5000
+    weights:
+      fakelag: 15
+      command_flood: 10
+      packet_manipulation: 20
+      cmd_anomaly: 10
+      tick_irregularity: 10
+
+  behavior:
+    enabled: true
+    risk_score: 20
+    threshold: 0.5
+    min_samples: 5
+    cooldown_ms: 10000
+    weights:
+      consistency: 20
+      pattern: 15
+      streak: 10
+      headshot: 10
+      cross_round: 15
+
+# ── Risk Engine ──────────────────────────────────────────────────────────
+risk:
+
+  # Risk Level Thresholds
+  safe_level: 39
+  suspicious_level: 69
+  highly_suspicious_level: 99
+  cheating_level: 149
+  # 150+ = Banned
+
+  # Action Thresholds
+  log_threshold: 15
+  notify_admin_threshold: 40
+  record_demo_threshold: 70
+  kick_threshold: 100
+  temp_ban_threshold: 120
+  perm_ban_threshold: 200
+
+  # Action Configuration
+  auto_kick: true
+  auto_temp_ban: true
+  auto_perm_ban: false
+  temp_ban_duration_mins: 60
+  required_detections: 3
+  time_window_seconds: 300
+
+  # Score Decay
+  decay_rate: 0.5
+  decay_inactive_seconds: 30
+
+# ── Detection Philosophy ──────────────────────────────────────────────────
+# never_ban_one_event: true
+# Use accumulated evidence. Combine multiple detectors.
+# Reduce false positives. Allow skilled players to play.
+
+# ── Admin API ────────────────────────────────────────────────────────────
+api:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8080
+  auth_token: "change-me-sentinel-admin-token"
+  require_auth: true
+  enable_cors: true
+
+# ── Database ─────────────────────────────────────────────────────────────
+database:
+  type: "sqlite"
+  path: "sentinel.db"
+
+# ── Logging ──────────────────────────────────────────────────────────────
+logging:
+  directory: "logs/"
+  file_level: "info"
+  console_level: "warning"
+  json_format: true
+  max_file_size_mb: 50
+  max_files: 30
+  log_detections: true
+  log_player_activity: true
+  log_admin_actions: true

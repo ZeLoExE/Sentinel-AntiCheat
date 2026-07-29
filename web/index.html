@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel AntiCheat — Admin Dashboard</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">&#9733;</span>
+                    <span class="logo-text">Sentinel</span>
+                </div>
+                <span class="version">v1.0.0</span>
+            </div>
+
+            <div class="server-status-bar" id="serverStatus">
+                <span class="status-indicator online"></span>
+                <span class="status-text">Server Online</span>
+                <span class="player-count" id="playerCount">0</span>
+            </div>
+
+            <ul class="nav-list">
+                <li class="nav-item active" data-view="dashboard">
+                    <span class="nav-icon">&#9632;</span>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-view="players">
+                    <span class="nav-icon">&#9644;</span>
+                    <span>Players</span>
+                </li>
+                <li class="nav-item" data-view="detections">
+                    <span class="nav-icon">&#9671;</span>
+                    <span>Detections</span>
+                </li>
+                <li class="nav-item" data-view="risk">
+                    <span class="nav-icon">&#9673;</span>
+                    <span>Risk Leaderboard</span>
+                </li>
+                <li class="nav-item" data-view="bans">
+                    <span class="nav-icon">&#10006;</span>
+                    <span>Ban Management</span>
+                </li>
+                <li class="nav-item" data-view="logs">
+                    <span class="nav-icon">&#9776;</span>
+                    <span>Logs</span>
+                </li>
+                <li class="nav-item" data-view="statistics">
+                    <span class="nav-icon">&#9679;</span>
+                    <span>Statistics</span>
+                </li>
+                <li class="nav-item" data-view="settings">
+                    <span class="nav-icon">&#9881;</span>
+                    <span>Settings</span>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <span class="footer-text">Powered by Freebuff</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+
+            <!-- Dashboard View -->
+            <section class="view active" id="view-dashboard">
+                <header class="view-header">
+                    <h1>Dashboard</h1>
+                    <div class="header-actions">
+                        <span class="refresh-btn" onclick="refreshData()">&#8635; Refresh</span>
+                    </div>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Players Tracked</div>
+                        <div class="stat-value" id="statPlayers">0</div>
+                        <div class="stat-change">Currently online</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Detections</div>
+                        <div class="stat-value" id="statDetections">0</div>
+                        <div class="stat-change">All time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Bans</div>
+                        <div class="stat-value" id="statBans">0</div>
+                        <div class="stat-change">Currently banned</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Suspicious Players</div>
+                        <div class="stat-value" id="statSuspicious">0</div>
+                        <div class="stat-change">Risk &gt; 40</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Detections (24h)</div>
+                        <div class="stat-value" id="statDetections24h">0</div>
+                        <div class="stat-change">Last 24 hours</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Uptime</div>
+                        <div class="stat-value" id="statUptime">0h</div>
+                        <div class="stat-change">Server running</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="card risk-chart-card">
+                        <h3>Risk Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card detection-timeline-card">
+                        <h3>Recent Detections</h3>
+                        <div class="timeline" id="recentDetections">
+                            <div class="timeline-empty">No recent detections</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Players View -->
+            <section class="view" id="view-players">
+                <header class="view-header">
+                    <h1>Players</h1>
+                    <div class="search-bar">
+                        <input type="text" id="playerSearch" placeholder="Search by name, SteamID, or IP..." oninput="searchPlayers(this.value)">
+                    </div>
+                </header>
+                <div class="table-container">
+                    <table class="data-table" id="playersTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>SteamID</th>
+                                <th>IP</th>
+                                <th>K/D</th>
+                                <th>HS%</th>
+                                <th>Risk</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playersBody">
+                            <tr><td colspan="8" class="loading-row">Loading players...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Detections View -->
+            <section class="view" id="view-detections">
+                <header class="view-header">
+                    <h1>Detections</h1>
+                    <div class="filter-bar">
+                        <select id="detectionFilter" onchange="filterDetections()">
+                            <option value="all">All Types</option>
+                            <option value="aim">Aim</option>
+                            <option value="movement">Movement</option>
+                            <option value="network">Network</option>
+                            <option value="behavior">Behavior</option>
+                        </select>
+                    </div>
+                </header>
+                <div class="table-container">
+                    <table class="data-table" id="detectionsTable">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Player</th>
+                                <th>Type</th>
+                                <th>Score</th>
+                                <th>Confidence</th>
+                                <th>Evidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detectionsBody">
+                            <tr><td colspan="6" class="loading-row">Loading detections...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Risk Leaderboard View -->
+            <section class="view" id="view-risk">
+                <header class="view-header">
+                    <h1>Risk Leaderboard</h1>
+                </header>
+                <div class="table-container">
+                    <table class="data-table" id="riskTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Player</th>
+                                <th>Total Score</th>
+                                <th>Aim</th>
+                                <th>Movement</th>
+                                <th>Network</th>
+                                <th>Behavior</th>
+                                <th>Detections</th>
+                                <th>Level</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riskBody">
+                            <tr><td colspan="10" class="loading-row">Loading risk data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Bans View -->
+            <section class="view" id="view-bans">
+                <header class="view-header">
+                    <h1>Ban Management</h1>
+                    <button class="btn btn-primary" onclick="showBanModal()">+ Issue Ban</button>
+                </header>
+                <div class="table-container">
+                    <table class="data-table" id="bansTable">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>SteamID</th>
+                                <th>Type</th>
+                                <th>Reason</th>
+                                <th>Issued</th>
+                                <th>Expires</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bansBody">
+                            <tr><td colspan="8" class="loading-row">Loading bans...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Logs View -->
+            <section class="view" id="view-logs">
+                <header class="view-header">
+                    <h1>System Logs</h1>
+                    <div class="filter-bar">
+                        <select id="logLevel" onchange="filterLogs()">
+                            <option value="all">All Levels</option>
+                            <option value="detection">Detections</option>
+                            <option value="warning">Warnings</option>
+                            <option value="error">Errors</option>
+                            <option value="info">Info</option>
+                        </select>
+                    </div>
+                </header>
+                <div class="log-container" id="logContainer">
+                    <div class="log-empty">No log entries</div>
+                </div>
+            </section>
+
+            <!-- Statistics View -->
+            <section class="view" id="view-statistics">
+                <header class="view-header">
+                    <h1>Statistics</h1>
+                </header>
+                <div class="stats-grid">
+                    <div class="card detection-chart-card">
+                        <h3>Detections Over Time</h3>
+                        <canvas id="detectionChart"></canvas>
+                    </div>
+                    <div class="card detection-chart-card">
+                        <h3>Detection Types</h3>
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Performance Metrics</h3>
+                    <div class="metrics-grid" id="metricsGrid">
+                        <div class="metric">
+                            <span class="metric-label">Avg. Response Time</span>
+                            <span class="metric-value" id="metricResponse">0ms</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Peak Players</span>
+                            <span class="metric-value" id="metricPeakPlayers">0</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Ban Rate</span>
+                            <span class="metric-value" id="metricBanRate">0%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">False Positive Rate</span>
+                            <span class="metric-value" id="metricFPR">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings View -->
+            <section class="view" id="view-settings">
+                <header class="view-header">
+                    <h1>Settings</h1>
+                </header>
+                <div class="settings-grid" id="settingsGrid">
+                    <div class="card">
+                        <h3>Detection Modules</h3>
+                        <div class="toggle-list" id="moduleToggles">
+                            <div class="toggle-item">
+                                <span>Aimbot Detector</span>
+                                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="toggle-item">
+                                <span>Movement Detector</span>
+                                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="toggle-item">
+                                <span>Network Detector</span>
+                                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                            </div>
+                            <div class="toggle-item">
+                                <span>Behavior Detector</span>
+                                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Risk Thresholds</h3>
+                        <div class="threshold-list" id="thresholdList">
+                            <div class="threshold-item">
+                                <span>Safe</span>
+                                <input type="range" min="0" max="100" value="39">
+                                <span class="threshold-value">0-39</span>
+                            </div>
+                            <div class="threshold-item">
+                                <span>Suspicious</span>
+                                <input type="range" min="0" max="100" value="69">
+                                <span class="threshold-value">40-69</span>
+                            </div>
+                            <div class="threshold-item">
+                                <span>Highly Suspicious</span>
+                                <input type="range" min="0" max="100" value="99">
+                                <span class="threshold-value">70-99</span>
+                            </div>
+                            <div class="threshold-item">
+                                <span>Cheating</span>
+                                <input type="range" min="0" max="200" value="149">
+                                <span class="threshold-value">100-149</span>
+                            </div>
+                            <div class="threshold-item">
+                                <span>Banned</span>
+                                <input type="range" min="100" max="300" value="150">
+                                <span class="threshold-value">150+</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="saveSettings()">Save Settings</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Ban Modal -->
+    <div class="modal-overlay" id="banModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Issue Ban</h2>
+                <button class="modal-close" onclick="hideBanModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Player SteamID / IP</label>
+                    <input type="text" id="banPlayerKey" placeholder="STEAM_0:0:12345 or IP">
+                </div>
+                <div class="form-group">
+                    <label>Ban Type</label>
+                    <select id="banType">
+                        <option value="4">Temporary Ban</option>
+                        <option value="5">Permanent Ban</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duration (minutes, for temp ban)</label>
+                    <input type="number" id="banDuration" value="60" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Reason</label>
+                    <textarea id="banReason" rows="3" placeholder="Reason for ban..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="hideBanModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="issueBan()">Issue Ban</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
